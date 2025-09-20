@@ -108,10 +108,34 @@ def dfs(start_state, goal_state):
 start_state = ["E", "E", "E", "_", "W", "W", "W"]
 goal_state  = ["W", "W", "W", "_", "E", "E", "E"]
 
-solution = bfs(start_state, goal_state)
-if solution:
+bfs_solution = bfs(start_state, goal_state)
+if bfs_solution:
     print("\nSolution found:")
-    for step in solution:
+    for step in bfs_solution:
         print(step)
 else:
     print("No solution found.")
+    
+dfs_solution = dfs(start_state, goal_state)
+if dfs_solution:
+    print("\nSolution found:")
+    for step in dfs_solution:
+        print(step)
+else:
+    print("No solution found.")
+
+
+#  What is the State space of 8-puzzle? - 7!/(3!*3!)
+# Yes the solution acquired by BFS is optimal and prints the frontier with steps 
+# The DFS solution is not optimal and prints the frontier with steps
+
+# The BFS solution is optimal because it explores all nodes at the present depth level before moving on to nodes at the next depth level.
+# The DFS solution is not optimal because it explores as far down a branch as possible before backtracking, which can lead to longer paths being found before shorter ones. For this question it gets lucky here but in general it is not optimal.
+
+# | Aspect                     | BFS                                                        | DFS                                                                         |
+# | -------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------- |
+# | **Solution length**        | Always minimal (fewest moves) because uniform cost.        | May be longer than minimal (depends on exploration order).                  |
+# | **Nodes explored**         | Explores breadthwise; more memory but predictable.         | Explores depthwise; uses less memory but can explore deep/irrelevant paths. |
+# | **Space complexity**       | $O(b^d)$ (branching factor $b$, depth $d$) — can be large. | $O(bm)$ (m = maximum depth) — generally smaller.                            |
+# | **Time complexity**        | $O(b^d)$                                                   | $O(b^m)$ where m is the maximum depth searched.                             |
+# | **Output in this problem** | BFS prints optimal 15-move path (for 3+3 rabbits).         | DFS prints *a* valid path; may be same or longer depending on stack order.  |
