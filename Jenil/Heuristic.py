@@ -1,6 +1,25 @@
 import heapq
 from typing import List, Tuple, Optional
 import re
+import os
+
+
+def preprocess_document(text):
+    """
+    Preprocess a document:
+    1. Normalize (lowercase + remove punctuation except periods)
+    2. Tokenize into sentences
+    3. Join sentences back into a single string with periods
+    """
+    text = text.lower()  # Lowercase
+    text = re.sub(r'[^\w\s.]', '', text)  # Remove punctuation except periods
+    # Replace line breaks with space
+    text = text.replace('\n', ' ')
+    # Split into sentences by period
+    sentences = [s.strip() for s in text.split('.') if s.strip()]
+    # Join sentences back into a single string separated by periods
+    result = '. '.join(sentences) + '.'
+    return result
 
 class Node:
     """
@@ -339,28 +358,36 @@ class PlagiarismDetector:
             'similar_sentences': similar_pairs
         }
 
-# Example usage and test function
-def test_plagiarism_detector():
-    """
-    Test the plagiarism detection system with sample inputs
-    """
-    detector = PlagiarismDetector(similarity_threshold=0.6)  # Lower threshold for better detection
+
+"""
+Test the plagiarism detection system with sample inputs
+"""
+
+
+
+if __name__ == "__main__":
+    # Get the folder where this script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Build full paths for doc1.txt and doc2.txt
+    doc1_path = os.path.join(script_dir, "doc1.txt")
+    doc2_path = os.path.join(script_dir, "doc2.txt")
+
+    # Read the files
+    with open(doc1_path, "r", encoding="utf-8") as f:
+        doc1 = f.read()
+    with open(doc2_path, "r", encoding="utf-8") as f:
+        doc2 = f.read()
     
-    # Test Case 1: Identical documents
-    text1 = """Walter Hartwell White Sr., also known by his alias Heisenberg, is a fictional character and the main protagonist of the American crime drama television series Breaking Bad. He is portrayed by Bryan Cranston.
+    text1 = preprocess_document(doc1)
+    text2 = preprocess_document(doc2)
 
-Walter is a skilled chemist who co-founded a technology firm before he accepted a buy-out from his partners. While his partners became wealthy, Walter became a high school chemistry teacher in Albuquerque, New Mexico, barely making ends meet with his family: his wife, Skyler (Anna Gunn), and their son, Walter Jr. (RJ Mitte). At the start of the series, the day after his 50th birthday, he is diagnosed with Stage III lung cancer. After this discovery, Walter decides to manufacture and sell methamphetamine with his former student Jesse Pinkman (Aaron Paul) to ensure his family's financial security after his death. Due to his expertise, Walter's "blue meth" is purer than any other on the market, and he is pulled deeper into the illicit drug trade.
+    # Print results
+    print("text1 =", repr(text1))
+    print("text2 =", repr(text2))
 
-An antihero[a] turned villain protagonist as the series progresses, Walter becomes increasingly ruthless and unsympathetic, as the series' creator, Vince Gilligan, wanted him to turn from "Mr. Chips into Scarface". He adopts the alias "Heisenberg", which becomes recognizable as a kingpin figure in the Southwestern drug trade. Walter struggles with managing his family while hiding his involvement in the drug business from his brother-in-law, Hank Schrader (Dean Norris), an agent of the Drug Enforcement Administration. Although AMC officials initially hesitated to cast Cranston due to his previous comedic role in Malcolm in the Middle, Gilligan cast him based on his past performance in The X-Files episode "Drive", which Gilligan wrote. Cranston contributed greatly to the creation of his character, including Walter's backstory, personality, and physical appearance.
 
-Both Walter and Cranston's performance have received critical acclaim, and Walter has frequently been mentioned as one of the greatest and most iconic television characters ever created. Cranston won four Primetime Emmy Awards for Outstanding Lead Actor in a Drama Series, three of them being consecutive. He is the first man to win a Critics' Choice, Golden Globe, Primetime Emmy, and Screen Actors Guild Award for his performance. Cranston reprised the role in a flashback for Breaking Bad's sequel film, El Camino: A Breaking Bad Movie, and again in the sixth and final season of the prequel series Better Call Saul, making him one of the few characters to appear in all three, alongside Jesse Pinkman, Mike Ehrmantraut (Jonathan Banks), Ed Galbraith (Robert Forster), and Austin Ramey (Todd Terry). """
-    text2 = """Walter Hartwell White Sr., better known under the alias Heisenberg, is the central figure of the American crime drama Breaking Bad. The role is portrayed by actor Bryan Cranston.
-
-Once a brilliant chemist and co-founder of a technology startup, Walter walked away after accepting a buyout from his partners, who went on to achieve great success. In contrast, he found himself working as a high school chemistry teacher in Albuquerque, New Mexico, supporting his wife Skyler (Anna Gunn) and their teenage son, Walter Jr. (RJ Mitte), while struggling financially. On the day after his 50th birthday, Walter is diagnosed with Stage III lung cancer. Determined to leave behind financial security for his family, he partners with his former student Jesse Pinkman (Aaron Paul) to produce and sell methamphetamine. Thanks to his scientific skill, his distinctive blue product proves unmatched in purity, drawing him deeper into the criminal underworld.
-
-Over time, Walter shifts from reluctant antihero to ruthless villain, fulfilling creator Vince Gilligan’s vision of transforming him from “Mr. Chips into Scarface.” He adopts the moniker Heisenberg, which becomes infamous across the Southwest drug trade. As his empire grows, Walter faces mounting tension at home and must conceal his secret life from his brother-in-law Hank Schrader (Dean Norris), an agent with the DEA. Casting Cranston was initially questioned by AMC executives due to his comedic history in Malcolm in the Middle, but Gilligan fought for him based on his performance in the X-Files episode “Drive.” Cranston further helped shape Walter’s persona, contributing ideas about his backstory, mannerisms, and appearance.
-
-Both the character and Cranston’s portrayal have been widely praised, with Walter often ranked among television’s most iconic figures. Cranston earned four Primetime Emmy Awards for Outstanding Lead Actor in a Drama Series, including three in a row, and became the first male actor to win an Emmy, Golden Globe, Critics’ Choice, and Screen Actors Guild Award for a single role. He reprised Walter White in a flashback for the sequel film El Camino: A Breaking Bad Movie, as well as in the final season of the prequel series Better Call Saul. Alongside Jesse Pinkman, Mike Ehrmantraut (Jonathan Banks), Ed Galbraith (Robert Forster), and Austin Ramey (Todd Terry), Walter is one of the rare characters to appear in all three productions."""
+    detector = PlagiarismDetector(similarity_threshold=0.6)  # Lower threshold for better detection
     
     print("=== Test Case 1: Identical Documents ===")
     result1 = detector.detect_plagiarism(text1, text2)
@@ -368,46 +395,5 @@ Both the character and Cranston’s portrayal have been widely praised, with Wal
     print(f"Average Similarity: {result1['average_similarity']:.2f}")
     print(f"Similar Pairs: {result1['similar_pairs']}")
     print()
-    
-    # # Test Case 2: Your specific test case (paragraph mode)
-    # doc1_orig = "Artificial intelligence has become a transformative force in modern society. From healthcare to finance, AI systems are reshaping how humans interact with technology and make decisions."
-    # doc2_similar = "Artificial intelligence is a powerful force in today's society. In fields such as healthcare and finance, AI is changing the way people interact with technology and the way decisions are made."
-    
-    # print("=== Test Case 2: Your Specific Example (Paragraph Mode) ===")
-    # result2 = detector.detect_plagiarism(doc1_orig, doc2_similar, paragraph_mode=True)
-    # print(f"Plagiarism Score: {result2['plagiarism_score']:.2f}")
-    # print(f"Average Similarity: {result2['average_similarity']:.2f}")
-    # print(f"Similar Pairs: {result2['similar_pairs']}")
-    
-    # # Print detailed alignment info
-    # if result2['alignments']:
-    #     for alignment in result2['alignments']:
-    #         print(f"Similarity: {alignment['similarity']:.3f}")
-    #         print(f"Doc1: {alignment['doc1_sentence'][:100]}...")
-    #         print(f"Doc2: {alignment['doc2_sentence'][:100]}...")
-    #         print(f"Is Similar: {alignment['is_similar']}")
-    # print()
-    
-    # # Test Case 3: Your specific test case (sentence mode)
-    # print("=== Test Case 3: Your Specific Example (Sentence Mode) ===")
-    # result3 = detector.detect_plagiarism(doc1_orig, doc2_similar, paragraph_mode=False)
-    # print(f"Plagiarism Score: {result3['plagiarism_score']:.2f}")
-    # print(f"Average Similarity: {result3['average_similarity']:.2f}")
-    # print(f"Similar Pairs: {result3['similar_pairs']}")
-    # print()
-    
-    # # Test Case 4: Completely different documents
-    # text5 = "The weather is sunny today. I like to read books. Programming is interesting."
-    # text6 = "Mathematics is challenging. Sports are fun to watch. Music helps me relax."
-    
-    # print("=== Test Case 4: Completely Different Documents ===")
-    # result4 = detector.detect_plagiarism(text5, text6)
-    # print(f"Plagiarism Score: {result4['plagiarism_score']:.2f}")
-    # print(f"Average Similarity: {result4['average_similarity']:.2f}")
-    # print(f"Similar Pairs: {result4['similar_pairs']}")
-    
-    return detector
 
-if __name__ == "__main__":
-    # Run the test
-    detector = test_plagiarism_detector()
+
