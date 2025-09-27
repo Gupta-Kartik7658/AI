@@ -1,3 +1,0 @@
-Plagiarism detection is crucial. 
-It helps find copied material. 
-Text alignment can be done using the A star algorithm?
