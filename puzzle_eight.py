@@ -76,16 +76,17 @@ def bfs(start_state, goal_state):
     # print('Total nodes explored', nodes_explored)
     return None
 
-start_state = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+start_state = [7,2,4,5,0,6,8,3,1]
 s_node = Node(start_state)
-D = 20
-d = 0
-while d <= D:
-    goal_state = random.choice(list(get_successors(s_node))).state
-    s_node = Node(goal_state)
-    d = d+1
-    # print(goal_state)
+# D = 20
+# d = 0
+# while d <= D:
+#     goal_state = random.choice(list(get_successors(s_node))).state
+#     s_node = Node(goal_state)
+#     d = d+1
+#     # print(goal_state)
 
+goal_state = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 solution = bfs(start_state, goal_state)
 if solution:
     print("Solution found:")
