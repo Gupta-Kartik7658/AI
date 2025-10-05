@@ -1,3 +1,0 @@
-Plagiarism detection is very important. 
-It helps in identifying copied content! 
-The A* algorithm can be used for text alignment.
