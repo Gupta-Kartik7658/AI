@@ -1,0 +1,766 @@
+\documentclass[journal]{IEEEtran}
+
+% *** PACKAGES ***
+\usepackage{amsmath,amsfonts}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{array}
+\usepackage[caption=false,font=footnotesize]{subfig}
+\usepackage{textcomp}
+\usepackage{stfloats}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{float} % <-- ADDED THIS PACKAGE
+% hyperref should be loaded last
+\usepackage{hyperref}
+
+\hyphenation{op-tical net-works semi-conductor}
+
+\begin{document}
+
+% --- TITLE AND AUTHORS ---
+\title{Laboratory Report 1 (In-Sem Submission)}
+
+\author{
+    Kartik Gupta,~\IEEEmembership{Student Member,~IEEE,}
+    Parmar Jenil Rajeshbhai,~\IEEEmembership{Student Member,~IEEE,}
+    and Priyanshu Kumar,~\IEEEmembership{Student Member,~IEEE}
+\thanks{The authors are with the Department of Computer Science and Engineering, Indian Institute of Information Technology Vadodara, Gandhinagar, Gujarat, India (e-mail: 202351056@iiitvadodara.ac.in).}% <-this % stops a space
+\thanks{Corresponding author: Kartik Gupta.}
+}
+
+
+% --- PAPER HEADERS ---
+\markboth{CS367/659 Artificial Intelligence Laboratory Report, Vol.~1, No.~1, October~2025}
+{Gupta \MakeLowercase{\textit{et al.}}: Laboratory Report 1}
+
+% --- MAKE TITLE ---
+\maketitle
+\IEEEpeerreviewmaketitle
+
+% --- ABSTRACT ---
+\begin{abstract}
+This report presents solutions developed for the first set of problems in the CS367/659 Artificial Intelligence laboratory course. The four problems discussed are the Rabbit Leap puzzle, a plagiarism detection system, the 3-satisfiability problem (3-SAT), and the Jigsaw puzzle. Each problem is formally defined in terms of its state-space, including initial state, goal state, and transition model. Appropriate algorithmic solutions are implemented and analyzed. Techniques range from classical search methods, such as Breadth-First Search (BFS) and Depth-First Search (DFS) for the Rabbit Leap problem, to heuristic and optimization approaches. The plagiarism checker utilizes the A* search algorithm for optimal text alignment. The k-SAT and Jigsaw problems are addressed using local search algorithms, including hill climbing, beam search, variable neighborhood descent, and simulated annealing. Comparative performance analyses are provided in terms of complexity, accuracy, and convergence.
+\end{abstract}
+
+% --- KEYWORDS ---
+\begin{IEEEkeywords}
+A* Search, Artificial Intelligence, Beam Search, Breadth-First Search (BFS), Depth-First Search (DFS), k-SAT, Simulated Annealing, State-Space Search, Variable Neighborhood Descent Search.
+\end{IEEEkeywords}
+
+
+% --- INTRODUCTION ---
+\section{Introduction}
+\IEEEPARstart{T}{his} paper provides an overview of four artificial intelligence problems solved as part of the CS367/659 laboratory. Each section discusses problem formulation, algorithmic design, implementation, and performance evaluation. The subsequent sections detail solutions to: (1) Rabbit Leap, (2) Plagiarism Checker, (3) k-SAT, and (4) Jigsaw Puzzle. The report concludes with an analysis of algorithmic trade-offs and future work directions.
+
+% --- RABBIT LEAP PROBLEM ---
+\section{The Rabbit Leap Problem}
+
+\subsection{Problem Formulation}
+In the Rabbit Leap problem, three east-bound rabbits stand in a line blocked by three west-bound rabbits on a stream with stones placed in a linear east-west direction. One empty stone separates them. Rabbits can only move forward one or two steps and can jump over one rabbit if needed, but not more than that. The objective is to determine if they can cross each other without stepping into the water.
+
+\subsection{State-Space Formulation}
+The Rabbit Leap problem is modeled as a state-space search problem, enabling the use of classical search algorithms like Breadth-First Search (BFS) and Depth-First Search (DFS). The linear sequence of positions holds either an East-facing rabbit (EE), a West-facing rabbit (WW), or an empty space (\_). The goal is to swap the positions so that EE rabbits move to the right and WW rabbits to the left.
+
+\subsubsection{State Representation}
+A state is represented as a string or list of seven symbols, e.g.:
+\begin{equation}
+[E, E, E, \_, W, W, W]
+\end{equation}
+or equivalently:
+\begin{equation}
+E\ E\ E\ \_\ W\ W\ W
+\end{equation}
+Each symbol corresponds to a position on the linear board.
+
+\subsubsection{Initial State}
+The starting configuration is:
+\begin{equation}
+E\ E\ E\ \_\ W\ W\ W
+\end{equation}
+Three EE rabbits are on the left, three WW rabbits on the right, with an empty slot in the middle.
+
+\subsubsection{Goal State}
+The objective is to achieve:
+\begin{equation}
+W\ W\ W\ \_\ E\ E\ E
+\end{equation}
+indicating WW rabbits on the left and EE rabbits on the right.
+
+\subsubsection{Algorithm for Initializing the State-Space Search}
+The following procedure initializes the Rabbit Leap problem by defining start and goal states, applying BFS or DFS to find a valid sequence of moves.
+\begin{algorithm}[H] % <-- CHANGED [htbp] to [H]
+\caption{Initialize State-Space Search}
+\begin{algorithmic}[1]
+\Function{SolveRabbitLeap}{start\_state}
+    \State \textbf{Input:} start\_state
+    \State \textbf{Output:} Prints solution path if found
+    \State Define goal\_state $\gets [W, W, W, \_, E, E, E]$
+    \State bfs\_solution $\gets$ bfs(start\_state, goal\_state)
+    \If{bfs\_solution exists}
+        \State Print ``BFS Solution Found:'', bfs\_solution
+    \Else
+        \State Print ``No BFS solution found.''
+    \EndIf
+    \State dfs\_solution $\gets$ dfs(start\_state, goal\_state)
+    \If{dfs\_solution exists}
+        \State Print ``DFS Solution Found:'', dfs\_solution
+    \Else
+        \State Print ``No DFS solution found.''
+    \EndIf
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Generating Neighboring States}
+Valid next states are generated by applying legal moves:
+\begin{enumerate}
+    \item An EE rabbit moves one position right into an empty slot.
+    \item An EE rabbit jumps over one WW rabbit if the space beyond is empty.
+    \item A WW rabbit moves one position left into an empty slot.
+    \item A WW rabbit jumps over one EE rabbit if the space beyond is empty.
+\end{enumerate}
+Each action swaps the moving rabbit with the empty slot.
+
+\subsubsection{Example of State Transitions}
+\begin{align}
+&E\ E\ E\ \_\ W\ W\ W \notag \\
+&E\ E\ \_\ E\ W\ W\ W \notag \\
+&E\ E\ W\ E\ \_\ W\ W \notag
+\end{align}
+and so on, until the goal configuration is achieved.
+
+\begin{algorithm}[H] 
+\caption{Generate Neighboring States}
+\begin{algorithmic}[1]
+\Function{GetSuccessor}{current\_node}
+    \State \textbf{Input:} Node current\_node with state $s$
+    \State \textbf{Output:} List of valid successor nodes
+    \State pos $\gets$ index of ``\_'' in $s$
+    \State successors $\gets []$
+    \If{pos - 1 $\ge$ 0 \textbf{and} $s$[pos - 1] = E}
+        \State Swap (pos, pos - 1) to form new state
+        \State Add new state to successors
+    \EndIf
+    \If{pos - 2 $\ge$ 0 \textbf{and} $s$[pos - 2] = E \textbf{and} $s$[pos - 1] $\in \{E, W\}$}
+        \State Swap (pos, pos - 2) to form new state
+        \State Add new state to successors
+    \EndIf
+    \If{pos + 1 < $|s|$ \textbf{and} $s$[pos + 1] = W}
+        \State Swap (pos, pos + 1) to form new state
+        \State Add new state to successors
+    \EndIf
+    \If{pos + 2 < $|s|$ \textbf{and} $s$[pos + 2] = W \textbf{and} $s$[pos + 1] $\in \{E, W\}$}
+        \State Swap (pos, pos + 2) to form new state
+        \State Add new state to successors
+    \EndIf
+    \State \Return successors
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{State-Space Size}
+The total number of unique configurations is:
+\begin{equation}
+N = \frac{7!}{3! \times 3! \times 1!} = 140
+\end{equation}
+representing 140 distinct arrangements of three EE rabbits, three WW rabbits, and one empty slot.
+
+\subsubsection{Summary}
+The state space consists of all permutations of $\{E, E, E, W, W, W, \_\}$, with initial state $E\ E\ E\ \_\ W\ W\ W$, goal state $W\ W\ W\ \_\ E\ E\ E$, and transitions defined by single or jump moves.
+
+\subsection{Solution Using Breadth-First Search (BFS)}
+BFS explores states level by level to find the minimum-move solution, guaranteeing optimality due to uniform edge costs.
+\begin{algorithm}[H] % <-- CHANGED [htbp] to [H]
+\caption{BFS for Rabbit Puzzle}
+\begin{algorithmic}[1]
+\Function{BFS}{start\_state, goal\_state}
+    \State start\_node $\gets$ \textsc{Node}(start\_state, parent=\textsc{None})
+    \State queue $\gets$ \textsc{Queue}()
+    \State queue.enqueue(start\_node)
+    \State visited $\gets$ \textsc{Set}()
+    \State visited.add(\textit{tuple}(start\_state))
+    \While{queue is not empty}
+        \State current\_node $\gets$ queue.dequeue()
+        \If{current\_node.state = goal\_state}
+            \State \Return \textsc{reconstruct\_path}(current\_node)
+        \EndIf
+        \For{each successor \textbf{in} \textsc{GetSuccessors}(current\_node)}
+            \If{\textit{tuple}(successor.state) not in visited}
+                \State visited.add(\textit{tuple}(successor.state))
+                \State queue.enqueue(successor)
+            \EndIf
+        \EndFor
+    \EndWhile
+    \State \Return \textsc{None}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Solution Using Depth-First Search (DFS)}
+DFS explores one branch deeply before backtracking, finding a solution faster in some cases but not guaranteeing optimality.
+\begin{algorithm}[H] % <-- CHANGED [htbp] to [H]
+\caption{DFS for Rabbit Puzzle}
+\begin{algorithmic}[1]
+\Function{DFS}{start\_state, goal\_state}
+    \State start\_node $\gets$ \textsc{Node}(start\_state, parent=\textsc{None})
+    \State stack $\gets$ \textsc{Stack}()
+    \State stack.push(start\_node)
+    \State visited $\gets$ \textsc{Set}()
+    \While{stack is not empty}
+        \State current\_node $\gets$ stack.pop()
+        \If{\textit{tuple}(current\_node.state) in visited}
+            \State \textbf{continue}
+        \EndIf
+        \State visited.add(\textit{tuple}(current\_node.state))
+        \If{current\_node.state = goal\_state}
+            \State \Return \textsc{reconstruct\_path}(current\_node)
+        \EndIf
+        \State successors $\gets$ \textsc{GetSuccessors}(current\_node)
+        \ForAll{s \textbf{in} \textsc{reversed}(successors)}
+            \State stack.push(s)
+        \EndFor
+    \EndWhile
+    \State \Return \textsc{None}
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Comparability of Solutions}
+
+In the Rabbit Leap problem, both BFS and DFS can find a solution, but the nature of the solutions and the computational resources required differ.
+
+\textbf{BFS Solution:} Breadth-First Search explores all nodes at the current depth level before moving deeper. This guarantees that the first solution found is the shortest possible in terms of moves. In our problem, BFS produces an optimal solution in 16 Steps by exploring 72 states and prints the frontier with all intermediate steps. However, BFS requires significant memory to store all nodes at the current depth, leading to high space complexity of $O(b^d)$, where $b$ is the branching factor and $d$ is the depth of the solution. The time complexity is also $O(b^d)$ since it must explore all nodes at each level.
+
+\textbf{DFS Solution:} Depth-First Search explores as far as possible along one branch before backtracking. This can result in longer paths being found before shorter ones, making DFS non-optimal in general. In this problem however, DFS does finds the optimal path same as DFS in 16 Steps by exploring less than half of the states explored by BFS in just 35 states. DFS uses less memory, only storing nodes along the current path, leading to space complexity of $O(bm)$, where $m$ is the maximum depth of the search. The time complexity is $O(b^m)$, which can be large if the search goes deep into irrelevant branches.
+
+\textbf{Comparison:} BFS guarantees the shortest solution and predictable behavior, but at the cost of high memory usage. DFS is more memory-efficient and can quickly find a valid solution (optimal also in this case), but it may not be optimal always and can explore many unnecessary paths. In terms of solution length, BFS always finds the minimal moves, whereas DFS may find a longer path depending on the exploration order. 
+
+\textbf{Summary:} BFS is preferred when optimality is required and memory is available. DFS is suitable for memory-constrained situations or when any valid solution is sufficient, even if it is not minimal.
+
+
+% --- PLAGIARISM CHECKER ---
+\section{Plagiarism Checker}
+
+\subsection{Problem Formulation}
+The plagiarism detection system uses the A* search algorithm to find the optimal alignment between sentences of two documents, with alignment cost based on sentence similarity, reframing plagiarism detection as a pathfinding problem.
+
+\subsection{State-Space Formulation}
+The goal is to find the least-cost path from a starting alignment to a complete alignment, with cost determined by total edit distance.
+
+\subsubsection{State Representation}
+A state is a tuple $(i, j)$, where:
+\begin{itemize}
+    \item $i$: index of the current sentence in the first document (doc1).
+    \item $j$: index of the current sentence in the second document (doc2).
+\end{itemize}
+This signifies that the first $i$ sentences of doc1 and $j$ sentences of doc2 are aligned.
+
+\subsubsection{Initial and Goal States}
+\begin{itemize}
+    \item \textbf{Initial State:} $(0, 0)$, representing the start before any sentences are aligned.
+    \item \textbf{Goal State:} $(N, M)$, where $N$ is the number of sentences in doc1 and $M$ in doc2, indicating all sentences are aligned.
+\end{itemize}
+
+\subsubsection{Get Neighboring States}
+From state $(i, j)$, three transitions are possible:
+\begin{enumerate}
+    \item \textbf{Align:} Align sentence $i$ from doc1 with $j$ from doc2, moving to $(i+1, j+1)$.
+    \item \textbf{Delete (Skip in doc1):} Skip sentence $i$ in doc1, moving to $(i+1, j)$.
+    \item \textbf{Insert (Skip in doc2):} Skip sentence $j$ in doc2, moving to $(i, j+1)$.
+\end{enumerate}
+
+\subsubsection{Cost Function \texorpdfstring{$g(n)$}{g(n)}}
+The cost $g(n)$ for state $n=(i, j)$ is the accumulated path cost from the start state, calculated using Levenshtein edit distance:
+\begin{itemize}
+    \item \textbf{Substitution cost:} Levenshtein distance between sentence $i$ of doc1 and $j$ of doc2.
+    \item \textbf{Insertion cost:} Length of sentence $j$ in doc2.
+    \item \textbf{Deletion cost:} Length of sentence $i$ in doc1.
+\end{itemize}
+\begin{algorithm}[H]
+\caption{Initialize State-Space Search for Plagiarism Checker}
+\begin{algorithmic}[1]
+\Function{InitializeSearch}{doc1, doc2}
+    \State \textbf{Input:} Preprocessed documents doc1 and doc2
+    \State \textbf{Output:} Initialized $open\_list$, $closed\_list$, and the $goal\_state$
+    
+    \State N $\gets$ number of sentences in doc1
+    \State M $\gets$ number of sentences in doc2
+    
+    \State start\_state $\gets (0, 0)$
+    \State goal\_state $\gets (N, M)$
+    
+    \State g\_cost $\gets 0$
+    \State h\_cost $\gets$ \Call{HeuristicCost}{start\_state, doc1, doc2}
+    \State start\_node $\gets$ \Call{Node}{start\_state, \text{parent=None}, g\_cost, h\_cost}
+    
+    \State open\_list $\gets$ PriorityQueue()
+    \State \Call{Push}{open\_list, start\_node}
+    
+    \State closed\_list $\gets$ Set()
+    
+    \State \Return open\_list, closed\_list, goal\_state
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Heuristic Function \texorpdfstring{$h(n)$}{h(n)}}
+The heuristic estimates the cost from $(i, j)$ to the goal state. We use the sum of lengths of all remaining unaligned sentences, which is admissible as it never overestimates the cost, assuming all remaining sentences are treated as insertions or deletions.
+
+\begin{algorithm}[H]
+\caption{Heuristic Cost for Plagiarism Checker}
+\begin{algorithmic}[1]
+\Function{HeuristicCost}{state, doc1, doc2}
+    \State \textbf{Input:} Current state $(i, j)$, documents doc1 and doc2
+    \State \textbf{Output:} An estimated cost to reach the goal
+    \State $(i, j) \gets$ state
+    \State estimated\_cost $\gets 0$
+ 
+    \For{$k\gets i$to length(doc1) - 1}
+        \State estimated\_cost$\gets$ estimated\_cost + length(doc1[$k$])
+    \EndFor
+    
+    \For{$k \gets j$ to length(doc2) - 1}
+        \State estimated\_cost$\gets$ estimated\_cost + length(doc2[$k$])
+    \EndFor
+    
+    \State \Return estimated\_cost
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Argument for Admissibility}
+A heuristic function $h(n)$ is \textbf{admissible} if it never overestimates the true optimal cost, $h^*(n)$, to reach the goal. Our heuristic calculates the cost of aligning the remaining sentences using only insertions and deletions, which represents one possible, but often suboptimal, path. The true optimal path can utilize the cheaper \textbf{substitution} operation, whose cost (Levenshtein distance) is always less than or equal to the cost of a deletion and an insertion. Because the heuristic calculates the cost of a potential worst-case path, its value can never exceed the true optimal cost. This satisfies the condition $h(n) \le h^*(n)$, proving the heuristic is admissible.
+
+\subsection{Implementation Details}
+
+\subsubsection{Text Preprocessing}
+The documents were preprocessed to normalize text and improve similarity comparison accuracy:
+\begin{enumerate}
+    \item Tokenization into sentences.
+    \item Conversion to lowercase.
+    \item Removal of punctuation marks.
+\end{enumerate}
+
+\subsubsection{A* Search Implementation}
+The A* algorithm uses a priority queue to manage states, ordered by $f(n) = g(n) + h(n)$. It explores the state space, expanding the node with the lowest f-score until the goal state is reached, then backtracks to reconstruct sentence alignments.
+\subsubsection{Algorithm for Levenshtein Distance}
+\begin{algorithm}[H]
+\caption{Calculate Levenshtein Distance}
+\begin{algorithmic}[1]
+\Function{LevenshteinDistance}{$s_1, s_2$}
+    \State \textbf{Input:} Two strings $s_1$ and $s_2$
+    \State \textbf{Output:} Edit distance
+    \If{$|s_2| = 0$}
+        \State \Return $|s_1|$
+    \EndIf
+    \State previous\_row $\gets [0, 1, \ldots, |s_2|]$
+    \For{$i \gets 0$ to $|s_1| - 1$}
+        \State current\_row $\gets [i + 1]$
+        \For{$j \gets 0$ to $|s_2| - 1$}
+            \State cost $\gets$ $(s_1[i] \neq s_2[j])$
+            \State value $\gets \min$(previous\_row[$j+1$]+1, current\_row[$j$]+1, previous\_row[$j$]+cost)
+            \State \Call{Append}{current\_row, value}
+        \EndFor
+        \State previous\_row $\gets$ current\_row
+    \EndFor
+    \State \Return previous\_row[$|s_2|$]
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Algorithm for Generating Successors}
+\begin{algorithm}[H]
+\caption{Generate Successors}
+\begin{algorithmic}[1]
+\Function{GetSuccessors}{$(i, j)$, $doc_1, doc_2$}
+    \State \textbf{Input:} State $(i, j)$, documents $doc_1, doc_2$
+    \State \textbf{Output:} List of (next\_state, cost) tuples
+    \State successors $\gets []$
+    \If{$i < |doc_1|$ \textbf{and} $j < |doc_2|$}
+        \State cost $\gets$ \Call{LevenshteinDistance}{$doc_1[i], doc_2[j]$}
+        \State \Call{Append}{successors, $((i+1, j+1)$, cost$)$}
+    \EndIf
+    \If{$i < |doc_1|$}
+        \State \Call{Append}{successors, $((i+1, j), |doc_1[i]|)$}
+    \EndIf
+    \If{$j < |doc_2|$}
+        \State \Call{Append}{successors, $((i, j+1), |doc_2[j]|)$}
+    \EndIf
+    \State \Return successors
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Algorithm for A* Search}
+\begin{algorithm}[H]
+\caption{A* Search}
+\begin{algorithmic}[1]
+\Function{AStarSearch}{$doc_1, doc_2$}
+    \State \textbf{Input:} Documents $doc_1, doc_2$
+    \State \textbf{Output:} Path and total cost
+    \State open\_list $\gets$ [start\_node], closed\_set $\gets \emptyset$
+    \While{open\_list $\neq \emptyset$}
+        \State current $\gets$ \Call{HeapPop}{open\_list}
+        \If{current.state $= (|doc_1|, |doc_2|)$}
+            \State \Return \Call{ReconstructPath}{current}
+        \EndIf
+        \State \Call{Add}{closed\_set, current.state}
+        \For{(next\_state, cost) \textbf{in} \Call{GetSuccessors}{current.state, $doc_1, doc_2$}}
+            \If{next\_state \textbf{not in} closed\_set}
+                \State g $\gets$ current.g\_cost + cost
+                \State h $\gets$ \Call{Heuristic}{next\_state, $doc_1, doc_2$}
+                \State node $\gets$ \Call{Node}{next\_state, current, $g$, $h$}
+                \State \Call{HeapPush}{open\_list, node}
+            \EndIf
+        \EndFor
+    \EndWhile
+    \State \Return ([], $\infty$)
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Results and Evaluation}
+The system was evaluated using three test cases to assess accuracy and efficiency.
+
+\subsubsection{Test Cases}
+\begin{itemize}
+    \item \textbf{Identical Documents:} Two identical documents with 6 sentences about artificial neural networks yielded a plagiarism score of 1.00 and average similarity of 1.00, with all 6 sentence pairs identified as similar (zero edit distance). This confirms the algorithm's ability to detect exact matches with 100\% accuracy.
+    \item \textbf{Slightly Modified Document:} Two documents with 10 sentences each about AI, one paraphrased, produced a plagiarism score of 0.20 and average similarity of 0.50, with 2 similar sentence pairs. The algorithm detected semantic overlap despite rewording, validating its effectiveness for non-literal plagiarism.
+    \item \textbf{Completely Different Documents:} Two unrelated documents (9 sentences on neural network training, 7 on AI and neuroscience) yielded a plagiarism score of 0.00 and average similarity of 0.25, with 0 similar sentence pairs, confirming the algorithm's ability to avoid false positives.
+    \item \textbf{Partial Overlap:} Two documents with 6 sentences each, sharing some overlapping sentences about technology and data science, produced a plagiarism score of 0.50 and an average similarity of 0.71, with 3 sentence pairs identified as similar. The overlapping content was correctly aligned, demonstrating the algorithm's ability to detect partial plagiarism while ignoring unrelated content.
+\end{itemize}
+% --- 3-SAT PROBLEM ---
+% --- 3-SAT PROBLEM ---
+\section{The 3-Satisfiability (3-SAT) Problem}
+
+\subsection{Problem Formulation}
+The k-Satisfiability (k-SAT) problem is a classic computational problem concerning Boolean satisfiability. The objective is to determine if there exists a truth assignment for a given set of variables that satisfies a Boolean formula. The formula is expressed in Conjunctive Normal Form (CNF), where it is a conjunction (AND) of several clauses, and each clause is a disjunction (OR) of exactly $k$ literals (a variable or its negation). This project focuses on the 3-SAT variant, where $k=3$. The task involves first generating a random 3-SAT problem instance given the number of variables ($n$) and clauses ($m$), and then solving it using various local search algorithms.
+
+\subsection{Algorithm to Generate a k-SAT Clause}
+A function was developed to generate random k-SAT instances. The program accepts parameters for $k$ (literals per clause), $m$ (number of clauses), and $n$ (number of variables). Each clause is constructed by randomly sampling $k$ distinct variables from the available $n$ variables and then randomly negating each variable with a 50\% probability. This ensures the creation of a uniform random k-SAT problem.
+
+\begin{algorithm}[H]
+\caption{Generate k-SAT Formula}
+\begin{algorithmic}[1]
+\Function{GenerateKSAT}{$k, m, n$}
+    \State \textbf{Input:} $k$ literals/clause, $m$ clauses, $n$ variables
+    \State \textbf{Output:} A formula in CNF with $m$ clauses
+    \State formula $\gets []$
+    \For{$i \gets 1$ to $m$}
+        \State variables $\gets$ \Call{SampleDistinct}{$1, \dots, n$, size=$k$}
+        \State clause $\gets []$
+        \For{each var \textbf{in} variables}
+            \If{\Call{RandomChoice}{True, False}}
+                \State \Call{Append}{clause, var}
+            \Else
+                \State \Call{Append}{clause, -var}
+            \EndIf
+        \EndFor
+        \State \Call{Append}{formula, clause}
+    \EndFor
+    \State \Return formula
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{State-Space Formulation}
+The 3-SAT problem is formulated as a local search problem over a state space where each state represents a complete truth assignment for all variables.
+
+\subsubsection{State Representation}
+A state is represented by a binary vector of length $n$, where $n$ is the total number of variables. Each element at index $i$ in the vector corresponds to the truth value of variable $x_{i+1}$. A value of `1` represents `True`, and `0` represents `False`.
+
+\subsubsection{Initial State}
+The initial state for the search is a truth assignment where all $n$ variables are set to `True`.
+
+\subsubsection{Goal State}
+A goal state is any truth assignment that satisfies all $m$ clauses in the formula. That is, for every clause, at least one of its literals evaluates to `True`.
+
+\subsubsection{Algorithm to Initialize State-Space}
+The search is initialized by first generating a 3-SAT problem instance and then defining the initial state.
+
+\begin{algorithm}[H]
+\caption{Initialize 3-SAT Search}
+\begin{algorithmic}[1]
+\Function{InitializeSearch}{$m, n$}
+    \State \textbf{Input:} $m$ clauses, $n$ variables
+    \State \textbf{Output:} The CNF formula and the initial state
+    \State formula $\gets$ \Call{GenerateKSAT}{3, $m, n$}
+    \State initial\_state $\gets$ array of $n$ ones
+    \State \Return formula, initial\_state
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Generating Neighbors}
+The neighborhood of a given state is defined as the set of all states that can be reached by flipping the truth value of a single variable. For a problem with $n$ variables, each state has $n$ neighbors.
+\begin{algorithm}[H]
+\caption{Generate Neighbors}
+\begin{algorithmic}[1]
+\Function{GetNeighbors}{state}
+    \State \textbf{Input:} A state (binary vector)
+    \State \textbf{Output:} A list of all neighboring states
+    \State successors $\gets []$
+    \For{$i \gets 0$ to length(state) - 1}
+        \State new\_state $\gets$ \Call{Copy}{state}
+        \State new\_state[$i$] $\gets 1 - $ new\_state[$i$] \Comment{Flip bit}
+        \State \Call{Append}{successors, new\_state}
+    \EndFor
+    \State \Return successors
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{State-Space Size}
+The size of the state space for a k-SAT problem is determined solely by the number of variables, $n$. Since each of the $n$ variables can assume one of two truth values (True or False), the total number of unique and complete truth assignments is $2^n$.
+
+\subsection{Heuristic Formulation}
+Two heuristic functions were implemented to guide the local search algorithms. Both are treated as fitness functions to be maximized.
+
+\subsubsection{Heuristic 1: Number of Satisfied Clauses}
+This heuristic directly measures the quality of a state by counting how many clauses in the formula are satisfied by the current truth assignment. The maximum value is $m$, which corresponds to a goal state.
+\begin{algorithm}[H]
+\caption{Heuristic 1: Count Satisfied Clauses}
+\begin{algorithmic}[1]
+\Function{Heuristic1}{state, clauses}
+    \State satisfied\_count $\gets 0$
+    \For{each clause \textbf{in} clauses}
+        \If{clause is satisfied by state}
+            \State satisfied\_count $\gets$ satisfied\_count + 1
+        \EndIf
+    \EndFor
+    \State \Return satisfied\_count
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Heuristic 2: Weighted Bias and Frequency}
+This is a more complex heuristic that considers the structure of the formula. For each variable, it calculates a `bias` (how often it appears as a positive vs. negative literal) and a `frequency` (how often it appears overall). The heuristic value is a weighted sum that encourages assigning truth values that align with the variable's bias, with an additional logarithmic term for frequency. The frequency term is always positive as in order to make an individual clause True we need only any one of the variable to be True thus if any of the variable's bias turns out to be 0 which means that it appears equal number of times in positive as well as negative literal we assign it a positive value on the basis of the above logic.
+\begin{algorithm}[H]
+\caption{Heuristic 2: Weighted Heuristic}
+\begin{algorithmic}[1]
+\Function{Heuristic2}{state, bias, frequency, $\lambda$}
+    \State h\_value $\gets 0$
+    \For{$i \gets 0$ to length(state) - 1}
+        \If{state[$i$] = 1}
+            \State $s_i \gets 1$
+        \Else
+            \State $s_i \gets -1$
+        \EndIf
+        \State h\_value $\gets$ h\_value + $s_i \times (\text{bias}_{i+1} + \lambda \times \log(1 + \text{frequency}_{i+1}))$
+    \EndFor
+    \State \Return h\_value
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Solution using Hill Climbing}
+Hill climbing is a greedy local search algorithm that iteratively moves to the best neighboring state. It terminates when it reaches a peak (a local maximum) from which no neighbor has a higher heuristic value.
+\begin{algorithm}[H]
+\caption{Hill Climbing for 3-SAT}
+\begin{algorithmic}[1]
+\Function{HillClimbing}{initial\_state, clauses}
+    \State current $\gets$ initial\_state
+    \While{True}
+        \If{\Call{IsGoalState}{current, clauses}}
+            \State \Return current
+        \EndIf
+        \State neighbors $\gets$ \Call{GetNeighbors}{current}
+        \State best\_neighbor $\gets$ \Call{ArgMax}{neighbors, Heuristic}
+        \If{\Call{Heuristic}{best\_neighbor} $\le$ \Call{Heuristic}{current}}
+            \State \Return "Stuck in local maximum"
+        \EndIf
+        \State current $\gets$ best\_neighbor
+    \EndWhile
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Solution using Beam Search}
+Beam search is an extension of hill climbing that keeps track of the best $k$ states (the "beam") at each step. It explores the search space more broadly by generating all successors of all states in the beam and selecting the best $k$ unique successors for the next iteration.
+\begin{algorithm}[H]
+\caption{Beam Search for 3-SAT}
+\begin{algorithmic}[1]
+\Function{BeamSearch}{initial\_state, clauses, beam\_width}
+    \State beam $\gets$ [initial\_state]
+    \While{beam is not empty}
+        \State all\_successors $\gets \emptyset$
+        \For{each state \textbf{in} beam}
+            \If{\Call{IsGoalState}{state, clauses}}
+                \State \Return state
+            \EndIf
+            \State all\_successors $\gets$ all\_successors $\cup$ \Call{GetNeighbors}{state}
+        \EndFor
+        \State \Call{SortByHeuristicDescending}{all\_successors}
+        \State beam $\gets$ first beam\_width unique states from all\_successors
+    \EndWhile
+    \State \Return "No solution found"
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Solution using Variable Neighborhood Descent}
+Variable Neighborhood Descent (VND) is a metaheuristic that systematically explores different neighborhood structures to escape local optima. We define three neighborhood structures:
+\begin{itemize}
+    \item \textbf{N1:} The set of states reachable by flipping 1 bit.
+    \item \textbf{N2:} The set of states reachable by flipping 2 distinct bits.
+    \item \textbf{N3:} The set of states reachable by flipping 3 distinct bits.
+\end{itemize}
+The algorithm starts by searching in N1. If an improvement is found, the search returns to N1 from the new, better state. If no improvement is found in N1, it proceeds to search in N2, and then N3.
+
+\begin{algorithm}[H]
+\caption{Variable Neighborhood Descent for 3-SAT}
+\begin{algorithmic}[1]
+\Function{VND}{initial\_state, clauses}
+    \State current $\gets$ initial\_state
+    \State k $\gets$ 1 
+    \While{k $\le$ 3}
+        \If{\Call{IsGoalState}{current, clauses}}
+            \State \Return current
+        \EndIf
+        \State neighborhood $\gets$ \Call{GetNeighbors}{current, k}
+        \State best\_neighbor $\gets$\Call{ArgMax}{neighborhood, Heuristic}
+        \If{\Call{Heuristic}{best\_neighbor}$>$\Call{Heuristic}{current}}
+            \State current $\gets$ best\_neighbor
+            \State k $\gets$ 1 
+        \Else
+            \State k $\gets$ k + 1
+        \EndIf
+    \EndWhile
+    \State \Return "No solution found"
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Analysis}
+The results show several key findings:
+\begin{itemize}
+    \item \textbf{Best Overall Algorithm:} \textbf{Beam Search} was the most efficient, finding a solution in just 2 steps. By maintaining multiple promising candidates, it avoided a slightly longer path taken by the other greedy algorithms and found a different, more direct solution.
+    \item \textbf{Hill-Climbing vs. VND:} For this relatively simple instance, both algorithms performed identically, finding the same solution in 3 steps. The VND algorithm never needed to engage its larger second neighborhood ($N_2$), as no local optimum was encountered within $N_1$.
+    \item \textbf{Heuristic Effectiveness:} The bias and frequency-weighted heuristic (Heuristic 2) was highly effective, successfully guiding all algorithms to a solution by providing a clear path of increasing heuristic values (e.g., from 0.649 to 2.570).
+\end{itemize}
+In conclusion, all implemented local search methods were successful on the tested instance, with Beam Search demonstrating the highest efficiency. The problem's low difficulty meant that advanced features like VND's multiple neighborhoods were not required, but their inclusion provides a more robust solver for harder instances.
+% --- IMAGE JIGSAW PUZZLE PROBLEM ---
+\section{Image Jigsaw Puzzle as a State-Space Search Problem}
+
+\subsection{Problem Formulation}
+The challenge of solving a jigsaw puzzle can be framed as a state-space search problem. Given a set of $N$ scrambled, non-overlapping image pieces (in this case, 16 pieces from a 4x4 grid), the goal is to find the correct spatial arrangement that reconstructs the original, coherent image. This is a classic combinatorial optimization problem. Due to the enormous size of the state space (16! possible arrangements), exhaustive search is computationally infeasible. Therefore, metaheuristic methods like Simulated Annealing are employed to navigate the search space and find a high-quality solution by minimizing a cost function that quantifies the incorrectness of an arrangement. The puzzle consists of **16 square pieces**, each **128x128 pixels** in size.
+
+\subsection{State-Space Formulation}
+The problem is modeled by defining the components of a search space: states, neighbors, and an objective function.
+
+\subsubsection{State Representation}
+A state is defined as a specific permutation of the 16 puzzle pieces. It is represented computationally as a **flat list of 16 integers**, where the list index corresponds to a position in the 4x4 grid (in row-major order, 0 to 15) and the value at that index represents the unique ID of the piece placed in that position.
+\begin{equation}
+    \text{state} = [p_0, p_1, p_2, ..., p_{15}]
+\end{equation}
+For example, the state `[0, 1, 2, ..., 15]` represents the identity permutation where piece 0 is in position 0, piece 1 is in position 1, and so on.
+
+\subsubsection{Initial State}
+To ensure a thorough exploration of the search space, the algorithm is executed multiple times with different initial states. The first run begins with the **identity permutation** `[0, 1, ..., 15]` to establish a baseline, while subsequent runs start from a **randomly shuffled permutation**.
+
+\subsubsection{Goal State}
+Unlike problems with a known solution, the goal state is not explicitly defined. Instead, the objective is to find the state that **minimizes an energy (or cost) function**. The "solution" is the permutation with the lowest energy found by the algorithm, which should correspond to the most visually coherent arrangement of the pieces.
+
+\subsubsection{Generating Neighboring States}
+A neighboring state is generated by applying a small perturbation to the current state. Three distinct operators are used, chosen randomly at each step:
+\begin{enumerate}
+    \item \textbf{Swap:} Two random pieces in the grid exchange positions.
+    \item \textbf{Reverse Subsequence:} A random contiguous sub-sequence of pieces in the flat list is reversed.
+    \item \textbf{Relocate:} A piece from a random position is removed and re-inserted at another random position.
+\end{enumerate}
+
+\subsubsection{State-Space Size}
+The total number of unique arrangements for the 16 pieces is given by 16 factorial:
+\begin{equation}
+    16! = 20,922,789,888,000 \approx 2.09 \times 10^{13}
+\end{equation}
+This massive state space necessitates the use of a heuristic search algorithm.
+
+\subsection{Solution Using Simulated Annealing}
+Simulated Annealing (SA) is a probabilistic optimization algorithm inspired by the metallurgical process of annealing. It explores the state space by iteratively considering neighbor states, accepting not only better states (downhill moves) but also occasionally worse states (uphill moves) to escape local minima. The probability of accepting a worse state is controlled by a "temperature" parameter that gradually decreases over time.
+
+\subsubsection{Energy (Cost) Function}
+The quality of a puzzle arrangement is quantified by an energy function. The total energy is the sum of the dissimilarity scores across all 24 internal edges (12 horizontal and 12 vertical). The dissimilarity between any two adjacent pieces is calculated using the **Mean of Squared Differences (MSE)** of the pixel values along their shared edge. A 4-pixel deep edge is used for robustness.
+The error between two blocks, $i$ and $j$, along a shared boundary is:
+\begin{equation}
+    \text{Error}(i, j) = \frac{1}{N_{\text{pixels}}} \sum_{p=1}^{N_{\text{pixels}}} (E_i[p] - E_j[p])^2
+\end{equation}
+where $E_i[p]$ and $E_j[p]$ are the pixel values of the corresponding edges. The total energy $E(\text{state})$ is the sum of these error terms over all adjacent piece pairs in the current arrangement.
+
+\subsubsection{Annealing Schedule and Strategy}
+The effectiveness of SA is governed by its annealing schedule and search strategy.
+\begin{itemize}
+    \item \textbf{Initial Temperature ($T_0$):} The starting temperature is determined automatically. The algorithm samples 100 random neighbor moves to find the average change in energy, $\overline{\Delta E}$, and sets $T_0 = -\overline{\Delta E} / \ln(0.8)$. This ensures that approximately 80\% of worsening moves are initially accepted, encouraging broad exploration.
+    \item \textbf{Cooling Schedule:} A geometric cooling schedule is used, where the temperature $T$ is updated at each iteration $i$ according to the formula $T_i = T_0 \times \alpha^i$. A slow cooling rate of $\alpha=0.995$ is used over 8000 iterations to allow the system to settle carefully into a low-energy state.
+    \item \textbf{Restart Mechanism:} To further enhance the ability to escape deep local minima, a restart mechanism is implemented. If no improvement to the best-found solution is made for a specified number of iterations (a threshold of 2000), the search is reset to a new, random permutation. This prevents the algorithm from wasting excessive time in an unpromising region of the search space.
+    \item \textbf{Stopping Criterion:} The algorithm terminates after a fixed number of iterations (8000).
+\end{itemize}
+
+\subsubsection{Acceptance Probability}
+The decision to move to a new state is governed by the Metropolis criterion. If the new state has lower energy ($\Delta E < 0$), the move is always accepted. If the new state has higher energy ($\Delta E \ge 0$), it is accepted with a probability $P$:
+\begin{equation}
+    P(\text{accept}) = e^{-\Delta E / T}
+\end{equation}
+
+\begin{algorithm}[H]
+\caption{Simulated Annealing for Jigsaw Puzzle}
+\begin{algorithmic}[1]
+\Function{SimulatedAnnealing}{initial\_state, $T_0$, $\alpha$, max\_iters}
+    \State current\_state $\gets$ initial\_state
+    \State current\_energy $\gets$ \textsc{CalculateEnergy}(current\_state)
+    \State best\_state $\gets$ current\_state
+    \State no\_improvement\_count $\gets 0$
+    \State $T \gets T_0$
+    \For{i = 1 to max\_iters}
+        \State neighbor\_state $\gets$ \textsc{GenerateNeighbor}(current\_state)
+        \State neighbor\_energy $\gets$ \textsc{CalculateEnergy}(neighbor\_state)
+        \State $\Delta E \gets$ neighbor\_energy - current\_energy
+        \If{$\Delta E < 0$ \textbf{or} \textsc{random}() $< e^{-\Delta E / T}$}
+            \State current\_state $\gets$ neighbor\_state
+            \State current\_energy $\gets$ neighbor\_energy
+        \EndIf
+        \If{current\_energy $<$ \textsc{CalculateEnergy}(best\_state)}
+            \State best\_state $\gets$ current\_state
+            \State no\_improvement\_count $\gets 0$
+        \Else
+            \State no\_improvement\_count $\gets$ no\_improvement\_count + 1
+        \EndIf
+        \If{no\_improvement\_count $\ge$ restart\_threshold}
+             \State current\_state $\gets$ \textsc{RandomPermutation}() \Comment{Restart}
+             \State no\_improvement\_count $\gets 0$
+        \EndIf
+        \State $T \gets T \times \alpha$ \Comment{Cool down the temperature}
+    \EndFor
+    \State \Return best\_state
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Experimental Results and Analysis}
+The Simulated Annealing algorithm was run on the scrambled Lena image, successfully reconstructing a visually coherent and near-perfect final arrangement.
+
+\subsubsection{Solution Quality}
+The algorithm consistently converged to low-energy states, demonstrating its effectiveness. The final arrangement produced by the algorithm is visually almost identical to the original image, with a final energy value typically below 2000, indicating a very strong match between adjacent pieces. The success of the reconstruction validates the energy function as a reliable proxy for puzzle correctness.
+
+% To include your final image, uncomment the following lines
+% and replace "reconstructed_lena.png" with your image file name.
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.7\textwidth]{reconstructed_lena.png}
+%     \caption{The final reconstructed image of Lena produced by the Simulated Annealing algorithm.}
+%     \label{fig:lena}
+% \end{figure}
+
+\subsubsection{Performance Analysis}
+A plot of the system's energy over the 8000 iterations reveals the classic behavior of Simulated Annealing. Initially, at high temperatures, the energy fluctuates wildly as the algorithm explores distant regions of the state space. As the temperature decreases, the energy trend moves steadily downwards, with fewer and smaller upward jumps. Finally, at very low temperatures, the algorithm performs fine-tuning, settling into a deep energy minimum.
+
+The choice of annealing schedule parameters, particularly the slow cooling rate ($\alpha=0.995$), was critical. Faster rates often caused the algorithm to become prematurely trapped in suboptimal local minima, resulting in arrangements with noticeable flaws (e.g., two large, correct sections of the image swapped). The use of multiple neighbor-generation operators (swap, reverse, relocate) also contributed to a more robust search, preventing the algorithm from getting stuck in specific types of local optima.
+
+\end{document}
+
