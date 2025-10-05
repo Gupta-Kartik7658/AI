@@ -28,7 +28,7 @@ def heuristic2(state, bias, frequency_table):
     h = 0
     for i in range(len(state)):
         s_i = 1 if state[i] == 1 else -1
-        h += s_i * (bias[i+1] + 0.5 * np.log(1 + frequency_table[i+1]))
+        h += s_i * (bias[i+1]) + 0.5 * np.log(1 + frequency_table[i+1])
     return h
 
 def isGoalState(state, clauses):
@@ -117,8 +117,9 @@ def beam_search(start_state, clauses, bias, frequency_table, beam_width=3):
 
 
 
-k, m, n = 3, 4, 5
-clauses = [[-1, 5, -3], [-4, 3, 5], [4, 3, -5], [-4, -5, -3]]
+k, m, n = 3, 10 , 10
+# clauses = generate_clauses(k, m, n)
+clauses =[[-8, -10, -7], [-2, -6, 10], [-5, 2, -4], [-8, -9, -3], [-10, 5, -9], [1, -8, 3], [-1, -2, 5], [-3, 5, -7], [5, 10, -1], [4, 8, -1]]
 print("Clauses:", clauses)
 
 bias = {}
@@ -139,4 +140,5 @@ initial_state = [1]*n
 
 print("\nRunning Beam Searching:")
 path_h = beam_search(initial_state, clauses, bias, frequency_table, beam_width=3)
-print("Beam Path:", path_h)
+for i in path_h:
+    print(i)

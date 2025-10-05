@@ -25,12 +25,13 @@ def heuristic1(state, clauses):
     return h 
 
 
-def heuristic2(state, bias, frequency_table):
+def heuristic2(state, bias, frequency_table, lam=0.5, base=math.e):
     h = 0
     for i in range(len(state)):
         s_i = 1 if state[i] == 1 else -1
-        h += s_i * (bias[i+1] + 0.5 * np.log(1 + frequency_table[i+1]))
+        h += s_i * (bias[i+1] + lam * (math.log(1 + frequency_table[i+1], base)))
     return h
+
 
 def isGoalState(state, clauses):
     for clause in clauses:
@@ -59,60 +60,53 @@ def generate_clauses(k, m, n):
         clauses.append(clause)
     return clauses
 
-# ---------- A* search (alpha=beta=1) ----------
+# ---------- Hill climbing (max-h) ----------
 
-import itertools
-counter = itertools.count()
-
-def astar_search(start_state, clauses, bias, frequency_table):
-    start_h = heuristic2(start_state, bias, frequency_table)
-    start_node = Node(start_state, bias, frequency_table, g=0, h=start_h)
-
-    frontier = []
-    heapq.heappush(frontier, (start_node.f, next(counter), start_node))
+def hill_climb(start_state, clauses, bias, frequency_table):
+    """Greedy hill climbing with max-h."""
+    current = Node(start_state, bias, frequency_table, g=0,
+                   h=heuristic2(start_state, bias, frequency_table))
     visited = set()
     step = 0
 
-    while frontier:
+    while True:
         print("\n" + "="*40)
-        print(f"[A*] Step {step}: Frontier")
-        for f, _, n in frontier:
-            print(f"  State={n.state} g={n.g} h={n.h:.3f} f={n.f:.3f}")
-        step += 1
-
-        _, _, node = heapq.heappop(frontier)
-        print(f"\nChosen node: {node.state} g={node.g} h={node.h:.3f} f={node.f:.3f}")
-
-        tstate = tuple(node.state)
-        if tstate in visited:
-            print("Already visited. Skipping.")
-            continue
-        visited.add(tstate)
+        print(f"[Hill] Step {step}: Current={current.state} h={current.h:.3f}")
+        visited.add(tuple(current.state))
         print(f"Visited states: {len(visited)}")
 
-        if isGoalState(node.state, clauses):
+        if isGoalState(current.state, clauses):
             print("\nGoal reached!")
             path = []
+            node = current
             while node:
                 path.append(node.state)
                 node = node.parent
             return path[::-1]
 
-        successors = get_successors(node)
-        print(f"Expanding {len(successors)} successors:")
-        for s in successors:
-            print(f"  Successor={s.state} g={s.g} h={s.h:.3f} f={s.f:.3f}")
-            heapq.heappush(frontier, (s.f, next(counter), s))
+        successors = get_successors(current)
+        if not successors:
+            print("No successors.")
+            return None
 
-    print("\nNo solution found.")
-    return None
+        # choose best by h
+        best = max(successors, key=lambda s: s.h)
+        print(f"Best successor: {best.state} h={best.h:.3f}")
+
+        if tuple(best.state) in visited:
+            print("Stuck in local maximum.")
+            return None
+
+        current = best
+        step += 1
 
 
 
+# ---------- Example usage ----------
 
-
-k, m, n = 3, 4, 5
-clauses = [[-1, 5, -3], [-4, 3, 5], [4, 3, -5], [-4, -5, -3]]
+k, m, n = 3, 10 , 10
+# clauses = generate_clauses(k, m, n)
+clauses = [[-8, -10, -7], [-2, -6, 10], [-5, 2, -4], [-8, -9, -3], [-10, 5, -9], [1, -8, 3], [-1, -2, 5], [-3, 5, -7], [5, 10, -1], [4, 8, -1]]
 print("Clauses:", clauses)
 
 bias = {}
@@ -131,12 +125,9 @@ for i in range(1, n+1):
 
 initial_state = [1]*n
 
-# print("\nRunning A*:")
-# path_a = astar_search(initial_state, clauses, bias, frequency_table)
-# print("A* path:", path_a)
-
 print("\nRunning Hill climbing:")
-path_h = astar_search(initial_state, clauses, bias, frequency_table)
-print("Hill path:", path_h)
+path_h = hill_climb(initial_state, clauses, bias, frequency_table)
+for i in path_h:
+    print(i)
 
 

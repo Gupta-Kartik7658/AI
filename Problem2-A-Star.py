@@ -371,7 +371,7 @@ if __name__ == "__main__":
 
     # Construct the path to the Priyanshu/TC1 folder
     # '..' goes up one directory from 'Jenil' to 'AI'
-    target_folder = os.path.join(script_dir, '..', 'Priyanshu', 'TC3')
+    target_folder = os.path.join(script_dir, 'TC4')
 
     # Build the full paths for the documents inside the TC1 folder
     doc1_path = os.path.join(target_folder, "doc1.txt")
