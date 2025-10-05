@@ -366,12 +366,16 @@ Test the plagiarism detection system with sample inputs
 
 
 if __name__ == "__main__":
-    # Get the folder where this script is located
+    # Get the directory of the current script (Heuristic.py)
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Build full paths for doc1.txt and doc2.txt
-    doc1_path = os.path.join(script_dir, "doc1.txt")
-    doc2_path = os.path.join(script_dir, "doc2.txt")
+    # Construct the path to the Priyanshu/TC1 folder
+    # '..' goes up one directory from 'Jenil' to 'AI'
+    target_folder = os.path.join(script_dir, '..', 'Priyanshu', 'TC3')
+
+    # Build the full paths for the documents inside the TC1 folder
+    doc1_path = os.path.join(target_folder, "doc1.txt")
+    doc2_path = os.path.join(target_folder, "doc2.txt")
 
     # Read the files
     with open(doc1_path, "r", encoding="utf-8") as f:
